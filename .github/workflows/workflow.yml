@@ -1,0 +1,42 @@
+name: python-deployment
+run-name: ${{ github.actor }} - ${{ github.ref_name }}
+
+on:
+  push:
+    branches: ["main", "develop"]
+  pull_request:
+    branches: ["main"]
+
+env:
+  PYTHON_VERSION: 3.8
+
+jobs:
+  python-ci:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./src
+
+    steps:
+
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-python@v5
+      name: Setup Python ${{ env.PYTHON_VERSION }}
+      with:
+        python-version: '${{ env.PYTHON_VERSION }}'
+
+    - name: Lint
+      run: |
+        cd ../
+        flake8 . --show-source --statistics
+
+    - name: Check Complexity
+      run: |
+        cd ../
+        flake8 . --statistics --max-complexity=10 --exit-zero
+
+    - name: Run unit tests with pytest
+      run: |
+        pytest -v --cov=. --cov-report=term-missing --cov-report=json
